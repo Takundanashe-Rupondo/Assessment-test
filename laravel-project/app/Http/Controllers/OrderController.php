@@ -11,16 +11,48 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::with('user')->get();
+        $orders = Order::with('user', 'items')->get();
+        
+        // Ensure amounts are returned as float/decimal
+        $orders->transform(function ($order) {
+            $order->total_amount = (float) $order->total_amount;
+            
+            // Also ensure order item prices are float
+            if ($order->items) {
+                $order->items->transform(function ($item) {
+                    $item->price = (float) $item->price;
+                    return $item;
+                });
+            }
+            
+            return $order;
+        });
 
-        return response()->json($orders);
+        return response()->json([
+            'success' => true,
+            'data' => $orders
+        ]);
     }
 
     public function show($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with('user', 'items')->findOrFail($id);
+        
+        // Ensure amounts are returned as float/decimal
+        $order->total_amount = (float) $order->total_amount;
+        
+        // Also ensure order item prices are float
+        if ($order->items) {
+            $order->items->transform(function ($item) {
+                $item->price = (float) $item->price;
+                return $item;
+            });
+        }
 
-        return response()->json($order);
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
     }
 
     public function store(Request $request)

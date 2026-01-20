@@ -10,15 +10,30 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = Product::all();
+        
+        // Ensure price is returned as float/decimal
+        $products->transform(function ($product) {
+            $product->price = (float) $product->price;
+            return $product;
+        });
 
-        return response()->json($products);
+        return response()->json([
+            'success' => true,
+            'data' => $products
+        ]);
     }
 
     public function show($id)
     {
         $product = Product::findOrFail($id);
+        
+        // Ensure price is returned as float/decimal
+        $product->price = (float) $product->price;
 
-        return response()->json($product);
+        return response()->json([
+            'success' => true,
+            'data' => $product
+        ]);
     }
 
     public function store(Request $request)
