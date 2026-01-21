@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -16,13 +17,13 @@ class UserTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'test-created@example.com',
             'role' => 'user'
         ]);
 
         $this->assertInstanceOf(User::class, $user);
         $this->assertEquals('Test User', $user->name);
-        $this->assertEquals('test@example.com', $user->email);
+        $this->assertEquals('test-created@example.com', $user->email);
         $this->assertEquals('user', $user->role);
     }
 
@@ -50,7 +51,7 @@ class UserTest extends TestCase
     {
         User::factory()->create(['email' => 'test@example.com']);
 
-        $this->expectException(QueryException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
         User::factory()->create(['email' => 'test@example.com']);
     }
 
@@ -72,7 +73,7 @@ class UserTest extends TestCase
     {
         $userData = [
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'test-fillable@example.com',
             'password' => Hash::make('password'),
             'role' => 'user'
         ];
