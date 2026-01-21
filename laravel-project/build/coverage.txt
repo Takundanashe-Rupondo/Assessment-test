@@ -1,18 +1,14 @@
 
 
-[1;37;40mCode Coverage Report:     [0m
-[1;37;40m  2026-01-19 18:25:04     [0m
-[1;37;40m                          [0m
-[1;37;40m Summary:                 [0m
-[37;41m  Classes:  9.09% (1/11)  [0m
-[37;41m  Methods: 18.75% (6/32)  [0m
-[37;41m  Lines:   31.79% (48/151)[0m
+[1;37;40mCode Coverage Report:    [0m
+[1;37;40m  2026-01-20 13:34:40    [0m
+[1;37;40m                         [0m
+[1;37;40m Summary:                [0m
+[37;41m  Classes:  9.09% (1/11) [0m
+[37;41m  Methods:  6.25% (2/32) [0m
+[37;41m  Lines:    1.99% (3/151)[0m
 
 App\Console\Kernel
   [37;41mMethods:  50.00% ( 1/ 2)[0m   [30;43mLines:  66.67% (  2/  3)[0m
-App\Http\Controllers\OrderController
-  [37;41mMethods:  40.00% ( 2/ 5)[0m   [30;43mLines:  78.18% ( 43/ 55)[0m
 App\Http\Middleware\Authenticate
   [30;42mMethods: 100.00% ( 1/ 1)[0m   [30;42mLines: 100.00% (  1/  1)[0m
-App\Models\Order
-  [30;43mMethods:  66.67% ( 2/ 3)[0m   [37;41mLines:  40.00% (  2/  5)[0m
