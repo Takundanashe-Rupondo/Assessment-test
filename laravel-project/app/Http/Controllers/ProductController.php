@@ -17,10 +17,7 @@ class ProductController extends Controller
             return $product;
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $products
-        ]);
+        return response()->json($products);
     }
 
     public function show($id)
@@ -30,20 +27,20 @@ class ProductController extends Controller
         // Ensure price is returned as float/decimal
         $product->price = (float) $product->price;
 
-        return response()->json([
-            'success' => true,
-            'data' => $product
-        ]);
+        return response()->json($product);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string',
+            'price' => 'required|numeric|min:0',
             'description' => 'string',
+            'stock' => 'required|integer'
         ]);
 
         $product = Product::create($request->all());
+        $product->price = (float) $product->price;
 
         return response()->json($product, 201);
     }

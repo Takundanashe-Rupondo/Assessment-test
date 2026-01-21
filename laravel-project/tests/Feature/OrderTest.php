@@ -14,8 +14,6 @@ class OrderTest extends TestCase
     use RefreshDatabase;
 
 
-    
-
     public function test_user_gets_empty_orders_list()
     {
         $user = User::factory()->create();

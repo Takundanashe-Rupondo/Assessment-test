@@ -11,7 +11,9 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::with('user', 'items')->get();
+        $orders = Order::with('user', 'items')
+            ->where('user_id', $request->user()->id)
+            ->get();
         
         // Ensure amounts are returned as float/decimal
         $orders->transform(function ($order) {
@@ -28,15 +30,17 @@ class OrderController extends Controller
             return $order;
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $orders
-        ]);
+        return response()->json($orders);
     }
 
     public function show($id)
     {
         $order = Order::with('user', 'items')->findOrFail($id);
+        
+        // Check if user owns the order or is admin
+        if ($order->user_id !== request()->user()->id && request()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
         
         // Ensure amounts are returned as float/decimal
         $order->total_amount = (float) $order->total_amount;
@@ -49,18 +53,15 @@ class OrderController extends Controller
             });
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $order
-        ]);
+        return response()->json($order);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'items' => 'required|array',
-            'items.*.product_id' => 'required',
-            'items.*.quantity' => 'required|integer',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         $totalAmount = 0;
@@ -75,7 +76,7 @@ class OrderController extends Controller
             $orderItems[] = [
                 'product_id' => $product->id,
                 'quantity' => $item['quantity'],
-                'price' => $item['price'] ?? $product->price,
+                'price' => $product->price,
             ];
         }
 
@@ -86,6 +87,8 @@ class OrderController extends Controller
         ]);
 
         $order->items()->createMany($orderItems);
+        $order->load('user', 'items');
+        $order->total_amount = (float) $order->total_amount;
 
         return response()->json($order, 201);
     }
@@ -93,6 +96,12 @@ class OrderController extends Controller
     public function update(Request $request, $id)
     {
         $order = Order::findOrFail($id);
+        
+        // Only admin can update order status
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        
         $order->status = $request->input('status');
         $order->save();
 
@@ -101,11 +110,20 @@ class OrderController extends Controller
 
     public function getOrderStats(Request $request)
     {
-        $status = $request->input('status');
+        $totalOrders = Order::count();
+        $completedOrders = Order::where('status', 'completed')->count();
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $cancelledOrders = Order::where('status', 'cancelled')->count();
+        
+        $totalRevenue = Order::where('status', 'completed')->sum('total_amount');
 
-        $orders = DB::select("SELECT * FROM orders WHERE status = '$status'");
-
-        return response()->json($orders);
+        return response()->json([
+            'total_orders' => $totalOrders,
+            'completed_orders' => $completedOrders,
+            'pending_orders' => $pendingOrders,
+            'cancelled_orders' => $cancelledOrders,
+            'total_revenue' => (float) $totalRevenue,
+        ]);
     }
 }
 

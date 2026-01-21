@@ -17,6 +17,11 @@ class UserController extends Controller
     public function show($id)
     {
         $user = User::findOrFail($id);
+        
+        // Check if user is requesting their own profile or is admin
+        if (request()->user()->id != $user->id && request()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
 
         return response()->json($user);
     }
@@ -24,6 +29,17 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        
+        // Check if user is updating their own profile or is admin
+        if (request()->user()->id != $user->id && request()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        
+        $request->validate([
+            'name' => 'sometimes|string',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'password' => 'sometimes|string|min:6',
+        ]);
         
         $user->update($request->all());
 
