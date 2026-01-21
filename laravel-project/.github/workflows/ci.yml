@@ -1,0 +1,227 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3]
+        
+    name: PHP ${{ matrix.php-version }} Tests
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: qa_assessment_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, bcmath, soap, intl, gd, exif, iconv, imagick
+        coverage: xdebug
+        
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+    - name: Cache composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+        
+    - name: Install dependencies
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      
+    - name: Copy environment file
+      run: cp .env.example .env
+      
+    - name: Generate application key
+      run: php artisan key:generate
+      
+    - name: Set up testing environment
+      run: |
+        echo "APP_ENV=testing" >> .env
+        echo "DB_CONNECTION=mysql" >> .env
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=3306" >> .env
+        echo "DB_DATABASE=qa_assessment_test" >> .env
+        echo "DB_USERNAME=root" >> .env
+        echo "DB_PASSWORD=password" >> .env
+        echo "CACHE_DRIVER=array" >> .env
+        echo "SESSION_DRIVER=array" >> .env
+        echo "QUEUE_CONNECTION=sync" >> .env
+        echo "MAIL_MAILER=array" >> .env
+        
+    - name: Clear caches
+      run: |
+        php artisan config:clear
+        php artisan cache:clear
+        php artisan route:clear
+        
+    - name: Run database migrations
+      run: php artisan migrate --force
+      
+    - name: Run database seeders
+      run: php artisan db:seed --force
+      
+    - name: Run PHPUnit tests
+      run: |
+        mkdir -p reports/coverage
+        vendor/bin/phpunit --coverage-html reports/coverage --coverage-clover=coverage.xml
+        
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-php-${{ matrix.php-version }}
+        path: |
+          reports/
+          coverage.xml
+
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality Checks
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, bcmath, soap, intl, gd, exif, iconv, imagick
+        
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+    - name: Cache composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+        
+    - name: Install dependencies
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      
+    - name: Run Laravel Pint (Code Style)
+      run: vendor/bin/pint --test
+      
+    - name: Run PHPStan (Static Analysis)
+      run: |
+        composer require --dev phpstan/phpstan
+        vendor/bin/phpstan analyse --memory-limit=2G
+
+  security:
+    runs-on: ubuntu-latest
+    name: Security Checks
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, bcmath, soap, intl, gd, exif, iconv, imagick
+        
+    - name: Install dependencies
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      
+    - name: Run security audit
+      run: |
+        composer audit
+        curl -sSfL https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar -xz -C /tmp && \
+        composer require --dev enshrined/svg-sanitizer && \
+        vendor/bin/security-checker security:check
+
+  deploy:
+    needs: [test, code-quality, security]
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js (for frontend assets if any)
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install and build frontend assets
+      run: |
+        npm install
+        npm run build || echo "No frontend build script found"
+        
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /var/www/laravel-api
+          git pull origin main
+          composer install --no-dev --optimize-autoloader
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan migrate --force
+          php artisan queue:restart
+          sudo systemctl reload nginx
+          sudo systemctl reload php-fpm
+
+  notify:
+    needs: [test, code-quality, security, deploy]
+    runs-on: ubuntu-latest
+    name: Notify Results
+    if: always()
+    
+    steps:
+    - name: Notify Slack on Success
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        
+    - name: Notify Slack on Failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

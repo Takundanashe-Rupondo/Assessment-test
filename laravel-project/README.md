@@ -101,3 +101,116 @@ After running seeders, you'll have:
 - Authentication uses Laravel Sanctum tokens
 - Include `Authorization: Bearer {token}` header for protected routes
 
+## GitHub Actions CI/CD
+
+This project includes automated testing and deployment workflows using GitHub Actions.
+
+### Required Secrets
+
+Add these secrets to your GitHub repository settings:
+
+- `DEPLOY_HOST` - Your server IP address or hostname
+- `DEPLOY_USER` - SSH username for deployment
+- `DEPLOY_KEY` - SSH private key for server access
+- `SLACK_WEBHOOK` - (Optional) Slack webhook for notifications
+
+### Workflows
+
+#### 1. Tests Workflow (`.github/workflows/tests.yml`)
+- Triggers on push/PR to main and develop branches
+- Runs PHPUnit tests on PHP 8.1 and 8.2
+- Uses MySQL service for database testing
+- Generates code coverage reports with Codecov
+
+#### 2. Deploy Workflow (`.github/workflows/deploy.yml`)
+- Triggers on push to main branch
+- Installs production dependencies
+- Optimizes Laravel caches
+- Deploys to production server via SSH
+- Runs migrations and restarts services
+
+#### 3. Full CI/CD Pipeline (`.github/workflows/ci.yml`)
+- Comprehensive pipeline with multiple jobs
+- Tests on PHP 8.1, 8.2, and 8.3
+- Code quality checks (Laravel Pint, PHPStan)
+- Security audits
+- Deployment to production
+- Slack notifications
+
+### Docker Support
+
+The project includes Docker configuration for containerized deployment:
+
+#### Quick Start with Docker
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+#### Docker Services
+- **app** - PHP-FPM 8.2 service
+- **webserver** - Nginx web server
+- **db** - MySQL 8.0 database
+- **redis** - Redis cache service
+
+### Manual Deployment
+
+Use the provided deployment script for manual deployments:
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### Environment Setup for CI
+
+The GitHub Actions workflows automatically configure the testing environment with:
+- MySQL database service
+- Required PHP extensions
+- Optimized composer caching
+- Proper Laravel environment variables
+
+## Development Workflow
+
+1. **Feature Development**
+   - Create feature branch from develop
+   - Make changes and commit
+   - Push to trigger tests
+
+2. **Testing**
+   - GitHub Actions runs automated tests
+   - Code coverage reports generated
+   - Code quality checks performed
+
+3. **Deployment**
+   - Merge to develop triggers additional testing
+   - Merge to main triggers production deployment
+   - Automated notifications sent to Slack
+
+## Local Development with Docker
+
+For local development that matches the production environment:
+
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Start services
+docker-compose up -d
+
+# Run migrations
+docker-compose exec app php artisan migrate
+
+# Run tests
+docker-compose exec app php artisan test
+
+# Access application
+curl http://localhost:8080/api/products
+```
+
