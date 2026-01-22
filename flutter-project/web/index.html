@@ -16,7 +16,7 @@
   <link rel="manifest" href="manifest.json">
 
   <script>
-    var serviceWorkerVersion = "{{flutter_service_worker_version}}";
+    var serviceWorkerVersion = null;
     var scriptLoaded = false;
     function loadMainDartJs() {
       if (scriptLoaded) {
@@ -61,9 +61,14 @@
 <body>
   <script>
     window.addEventListener('load', function(ev) {
-      _flutter.loader.load({
+      _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp();
+          });
         }
       });
     });

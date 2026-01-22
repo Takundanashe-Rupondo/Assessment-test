@@ -21,7 +21,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final _apiService = ApiService();
   Product? _product;
   bool _isLoading = false;
-  bool _isAddingToCart = false;
 
   @override
   void initState() {
@@ -49,32 +48,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _addToCart() async {
-    if (_product == null) return;
-    
-    setState(() {
-      _isAddingToCart = true;
-    });
-
-    try {
-      await _apiService.addToCart(_product!.id, 1);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product added to cart!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add to cart: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isAddingToCart = false;
-        });
-      }
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Feature not implemented')),
+    );
   }
 
   @override
@@ -120,23 +96,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (product.isInStock && !_isAddingToCart) ? _addToCart : null,
-                child: _isAddingToCart
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Text('Adding...'),
-                        ],
-                      )
-                    : Text(product.isInStock ? 'Add to Cart' : 'Out of Stock'),
+                onPressed: product.isInStock ? _addToCart : null,
+                child: Text(product.isInStock ? 'Add to Cart' : 'Out of Stock'),
               ),
             ),
           ],

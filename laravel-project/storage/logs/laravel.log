@@ -6596,3 +6596,51 @@
 #51 C:/Users/UMER/Documents/Day/Take-Home-Assessment/laravel-project/vendor/phpunit/phpunit/phpunit(104): PHPUnit/TextUI/Application->run(Array)
 #52 {main}
 "} 
+[2026-01-21 13:18:00] local.ERROR: Command "test" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"test\" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test at C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php:745)
+[stacktrace]
+#0 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(266): Symfony/Component/Console/Application->find('test')
+#1 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/artisan(14): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 {main}
+"} 
+[2026-01-21 13:18:21] local.ERROR: Command "test" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"test\" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test at C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php:745)
+[stacktrace]
+#0 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(266): Symfony/Component/Console/Application->find('test')
+#1 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/artisan(14): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 {main}
+"} 
+[2026-01-21 13:19:25] local.ERROR: Command "test" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"test\" is not defined.
+
+Did you mean one of these?
+    make:test
+    schedule:test at C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php:745)
+[stacktrace]
+#0 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(266): Symfony/Component/Console/Application->find('test')
+#1 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/UMER/Desktop/unit testing/Take-Home-Assessment-main/Take-Home-Assessment-main/laravel-project/artisan(14): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 {main}
+"} 

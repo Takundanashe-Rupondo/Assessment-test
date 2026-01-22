@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qa_assessment_app/main.dart';
 
@@ -7,6 +8,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     // Verify that login screen is displayed
-    expect(find.text('Login'), findsWidgets);
+    expect(find.text('Login'), findsOneWidget);
   });
 }
+

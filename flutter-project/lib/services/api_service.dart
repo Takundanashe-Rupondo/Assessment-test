@@ -107,44 +107,27 @@ class ApiService {
 
   Future<List<Product>> getProducts() async {
     final response = await _makeRequest('GET', '/products');
-    final data = response['data'] as List;
-    return data.map((json) => Product.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => Product.fromJson(json))
+        .toList();
   }
 
   Future<Product> getProduct(int id) async {
     final response = await _makeRequest('GET', '/products/$id');
-    final data = response['data'];
-    return Product.fromJson(data);
+    return Product.fromJson(response);
   }
 
   Future<List<Order>> getOrders() async {
     final response = await _makeRequest('GET', '/orders');
-    final data = response['data'] as List;
-    return data.map((json) => Order.fromJson(json)).toList();
-  }
-
-  Future<void> addToCart(int productId, int quantity) async {
-    try {
-      await _makeRequest(
-        'POST',
-        '/orders',
-        body: {
-          'items': [
-            {
-              'product_id': productId,
-              'quantity': quantity,
-            }
-          ]
-        },
-      );
-    } catch (e) {
-      throw Exception('Failed to add to cart: ${e.toString()}');
+    if (response is List) {
+      return response.map((json) => Order.fromJson(json)).toList();
     }
+    return [];
   }
 
   Future<Order> getOrder(int id) async {
     final response = await _makeRequest('GET', '/orders/$id');
-    final data = response['data'];
-    return Order.fromJson(data);
+    return Order.fromJson(response);
   }
 }
+
