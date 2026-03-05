@@ -6,9 +6,16 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   postman:
     runs-on: ubuntu-latest
+    outputs:
+      pages_url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
     - name: Checkout code
@@ -64,14 +71,24 @@ jobs:
       run: npm install -g newman newman-reporter-htmlextra
 
     - name: Run Postman collection
+      continue-on-error: true
+      id: newman
       run: |
         mkdir -p newman
+        mkdir -p reports
+        cat > reports/env.json <<'JSON'
+        {
+          "APP_URL": "http://127.0.0.1:8000",
+          "DB_CONNECTION": "sqlite",
+          "DB_DATABASE": "database/database.sqlite"
+        }
+        JSON
         set -o pipefail
         newman run "laravel-project/Auth.postman_collection (1).json" \
           --env-var "Users=${{ secrets.POSTMAN_USERS_TOKEN }}" \
           --env-var "Token=${{ secrets.POSTMAN_USERS_TOKEN }}" \
           --reporters cli,htmlextra \
-          --reporter-htmlextra-export newman/report.html \
+          --reporter-htmlextra-export reports/index.html \
           2>&1 | tee newman/newman.log
 
     - name: Upload Newman HTML report
@@ -79,7 +96,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: postman-report
-        path: newman/report.html
+        path: reports/index.html
 
     - name: Upload Newman log
       if: always()
@@ -93,3 +110,22 @@ jobs:
       run: |
         echo "===== /tmp/laravel.log ====="
         cat /tmp/laravel.log || true
+
+    - name: Configure Pages
+      if: always()
+      uses: actions/configure-pages@v5
+
+    - name: Upload Pages artifact
+      if: always()
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./reports
+
+    - name: Deploy to GitHub Pages
+      if: always()
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: Fail pipeline if Newman failed
+      if: steps.newman.outcome == 'failure'
+      run: exit 1
