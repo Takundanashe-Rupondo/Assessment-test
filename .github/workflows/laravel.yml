@@ -48,6 +48,8 @@ jobs:
       working-directory: laravel-project
 
     - name: Execute tests (Unit and Feature tests) via PHPUnit
+      continue-on-error: true
+      id: phpunit
       run: vendor/bin/phpunit --log-junit storage/test-results/junit.xml
       working-directory: laravel-project
 
@@ -64,3 +66,7 @@ jobs:
       with:
         name: laravel-logs-laravel
         path: laravel-project/storage/logs/*.log
+
+    - name: Fail pipeline if PHPUnit failed
+      if: steps.phpunit.outcome == 'failure'
+      run: exit 1
