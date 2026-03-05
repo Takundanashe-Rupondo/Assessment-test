@@ -119,10 +119,19 @@ class ApiService {
 
   Future<List<Order>> getOrders() async {
     final response = await _makeRequest('GET', '/orders');
+    List<dynamic> ordersList;
+    
     if (response is List) {
-      return response.map((json) => Order.fromJson(json)).toList();
+      ordersList = response as List<dynamic>;
+    } else if (response is Map && response['orders'] is List) {
+      ordersList = response['orders'] as List<dynamic>;
+    } else if (response is Map && response['data'] is List) {
+      ordersList = response['data'] as List<dynamic>;
+    } else {
+      return [];
     }
-    return [];
+    
+    return ordersList.map((json) => Order.fromJson(json)).toList();
   }
 
   Future<Order> getOrder(int id) async {

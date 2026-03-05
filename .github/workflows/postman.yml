@@ -31,6 +31,7 @@ jobs:
         echo "APP_ENV=testing" >> .env
         echo "DB_CONNECTION=sqlite" >> .env
         echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+        echo "APP_URL=http://127.0.0.1:8000" >> .env
         php artisan config:clear
         php artisan cache:clear
         touch database/database.sqlite
@@ -43,7 +44,7 @@ jobs:
     - name: Start Laravel server
       run: |
         php artisan serve --host=127.0.0.1 --port=8000 >/tmp/laravel.log 2>&1 &
-        for i in {1..20}; do
+        for i in {1..40}; do
           if curl -fsS http://127.0.0.1:8000 >/dev/null 2>&1; then
             echo "Server is up"
             exit 0
@@ -60,10 +61,25 @@ jobs:
         node-version: '20'
 
     - name: Install Newman
-      run: npm install -g newman
+      run: npm install -g newman newman-reporter-htmlextra
 
     - name: Run Postman collection
       run: |
         newman run "laravel-project/Auth.postman_collection (1).json" \
           --env-var "Users=${{ secrets.POSTMAN_USERS_TOKEN }}" \
-          --env-var "Token=${{ secrets.POSTMAN_USERS_TOKEN }}"
+          --env-var "Token=${{ secrets.POSTMAN_USERS_TOKEN }}" \
+          --reporters cli,htmlextra \
+          --reporter-htmlextra-export newman/report.html
+
+    - name: Upload Newman HTML report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: postman-report
+        path: newman/report.html
+
+    - name: Dump Laravel server log on failure
+      if: failure()
+      run: |
+        echo "===== /tmp/laravel.log ====="
+        cat /tmp/laravel.log || true
