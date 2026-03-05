@@ -65,11 +65,14 @@ jobs:
 
     - name: Run Postman collection
       run: |
+        mkdir -p newman
+        set -o pipefail
         newman run "laravel-project/Auth.postman_collection (1).json" \
           --env-var "Users=${{ secrets.POSTMAN_USERS_TOKEN }}" \
           --env-var "Token=${{ secrets.POSTMAN_USERS_TOKEN }}" \
           --reporters cli,htmlextra \
-          --reporter-htmlextra-export newman/report.html
+          --reporter-htmlextra-export newman/report.html \
+          2>&1 | tee newman/newman.log
 
     - name: Upload Newman HTML report
       if: always()
@@ -77,6 +80,13 @@ jobs:
       with:
         name: postman-report
         path: newman/report.html
+
+    - name: Upload Newman log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: postman-log
+        path: newman/newman.log
 
     - name: Dump Laravel server log on failure
       if: failure()
