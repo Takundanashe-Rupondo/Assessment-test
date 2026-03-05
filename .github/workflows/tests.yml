@@ -45,5 +45,19 @@ jobs:
       working-directory: laravel-project
       
     - name: Run tests
-      run: vendor/bin/phpunit
+      run: vendor/bin/phpunit --log-junit storage/test-results/junit.xml
       working-directory: laravel-project
+
+    - name: Upload PHPUnit report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: phpunit-report-tests
+        path: laravel-project/storage/test-results/junit.xml
+
+    - name: Upload Laravel logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: laravel-logs-tests
+        path: laravel-project/storage/logs/*.log

@@ -1,0 +1,85 @@
+name: Postman Collection
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  postman:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, pdo_mysql, bcmath, soap, intl, gd
+
+    - name: Install dependencies
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+      working-directory: laravel-project
+
+    - name: Setup environment
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+        echo "APP_ENV=testing" >> .env
+        echo "DB_CONNECTION=sqlite" >> .env
+        echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+        echo "APP_URL=http://127.0.0.1:8000" >> .env
+        php artisan config:clear
+        php artisan cache:clear
+        touch database/database.sqlite
+      working-directory: laravel-project
+
+    - name: Run migrations
+      run: php artisan migrate --force
+      working-directory: laravel-project
+
+    - name: Start Laravel server
+      run: |
+        php artisan serve --host=127.0.0.1 --port=8000 >/tmp/laravel.log 2>&1 &
+        for i in {1..40}; do
+          if curl -fsS http://127.0.0.1:8000 >/dev/null 2>&1; then
+            echo "Server is up"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Server failed to start"
+        exit 1
+      working-directory: laravel-project
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Newman
+      run: npm install -g newman newman-reporter-htmlextra
+
+    - name: Run Postman collection
+      run: |
+        newman run "laravel-project/Auth.postman_collection (1).json" \
+          --env-var "Users=${{ secrets.POSTMAN_USERS_TOKEN }}" \
+          --env-var "Token=${{ secrets.POSTMAN_USERS_TOKEN }}" \
+          --reporters cli,htmlextra \
+          --reporter-htmlextra-export newman/report.html
+
+    - name: Upload Newman HTML report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: postman-report
+        path: newman/report.html
+
+    - name: Dump Laravel server log on failure
+      if: failure()
+      run: |
+        echo "===== /tmp/laravel.log ====="
+        cat /tmp/laravel.log || true
